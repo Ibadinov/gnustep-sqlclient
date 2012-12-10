@@ -996,8 +996,8 @@ SQLCLIENT_PRIVATE
  * </p>
  */
 - (NSMutableArray*) backendQuery: (NSString*)stmt
-		      recordType: (id)rtype
-		        listType: (id)ltype;
+		      recordType: (Class)rtype
+		        listType: (Class)ltype;
 
 /**
  * Calls -backendQuery:recordType:listType: with the default record class

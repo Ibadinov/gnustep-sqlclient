@@ -2033,8 +2033,8 @@ static unsigned int	maxConnections = 8;
 }
 
 - (NSMutableArray*) backendQuery: (NSString*)stmt
-		      recordType: (id)rtype
-		        listType: (id)ltype
+		      recordType: (Class)rtype
+		        listType: (Class)ltype
 {
   [NSException raise: NSInternalInconsistencyException
 	      format: @"Called -%@ without backend bundle loaded",
