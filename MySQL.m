@@ -413,10 +413,6 @@ static unsigned int trim(char *str)
 			    }
 			    break;
 
-			  case FIELD_TYPE_TINY:
-			    v = [NSString stringWithFormat: @"%u", *p];
-			    break;
-
 			  case FIELD_TYPE_BLOB:
 			  case FIELD_TYPE_TINY_BLOB:
 			  case FIELD_TYPE_MEDIUM_BLOB:
