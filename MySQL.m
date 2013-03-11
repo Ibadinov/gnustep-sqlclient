@@ -265,30 +265,6 @@ static NSNull	*null = nil;
   return rowCount;
 }
 
-static unsigned int trim(char *str)
-{
-  char	*start = str;
-
-  while (isspace(*str))
-    {
-      str++;
-    }
-  if (str != start)
-    {
-      strcpy(start, str);
-    }
-  str = start;
-  while (*str != '\0')
-    {
-      str++;
-    }
-  while (str > start && isspace(str[-1]))
-    {
-      *--str = '\0';
-    }
-  return (str - start);
-}
-
 - (NSMutableArray*) backendQuery: (NSString*)stmt
 		      recordType: (Class)rtype
 		        listType: (Class)ltype
@@ -430,7 +406,6 @@ static unsigned int trim(char *str)
 			    break;
 
 			  default:
-			    trim((char*)p);
 			    v = [NSString stringWithUTF8String: (char*)p];
 			    break;
 			}
