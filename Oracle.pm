@@ -303,30 +303,6 @@ void SQLClientOracleErrorHandler()
   return -1;
 }
 
-static unsigned int trim(char *str)
-{
-  char	*start = str;
-
-  while (isspace(*str))
-    {
-      str++;
-    }
-  if (str != start)
-    {
-      strcpy(start, str);
-    }
-  str = start;
-  while (*str != '\0')
-    {
-      str++;
-    }
-  while (str > start && isspace(str[-1]))
-    {
-      *--str = '\0';
-    }
-  return (str - start);
-}
-
 - (NSMutableArray*) backendQuery: (NSString*)stmt recordClass: (Class)rClass
 {
   EXEC SQL BEGIN DECLARE SECTION;
@@ -554,7 +530,6 @@ static unsigned int trim(char *str)
 			  
 			  /* \0-pad the string.  */
 			  aString[octetLength] = '\0'; 
-			  trim (aString);
 			  v = [NSString stringWithUTF8String: aString];
 			  free(aString);
 			  break;
@@ -585,7 +560,6 @@ static unsigned int trim(char *str)
 			  EXEC SQL GET DESCRIPTOR 'myDesc' VALUE :index
 			    :aString = DATA;
 			  aString[octetLength] = '\0';
-			  trim (aString);
 			  v = [NSString stringWithUTF8String: aString];
 			  free (aString);
 			  NSLog(@"(Oracle) Unknown data type (%d) for '%s': '%@'", 

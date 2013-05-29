@@ -1,3 +1,44 @@
+2013-04-10 Richard Frith-Macdonald  <rfm@gnu.org>
+
+        * ECPG.pgm:
+        * MySQL.m:
+        * Oracle.pm:
+        * Postgres.m:
+        * SQLClient.h:
+        * SQLClient.m:
+        * GNUmakefile:
+        Change behavior to no longer trim leading and trailing space from
+        values retrieved from database by default.
+        Add method to restore automatic trimming for a connection if needed.
+
+2013-03-04 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* Version 1.6.1: released
+
+2013-03-04 Richard Frith-Macdonald  <rfm@gnu.org>
+
+        * SQLClient.h: Add helper classe interfaces.
+        * SQLClient.m: Add helper classe implementations.
+        Add performance helper classes for when querying a set of records
+        containing single values and when querying a dataset which contains
+        key/value pairs more naturally haqndled as a dictionary than an array.
+        
+2013-02-11 Sebastian Reitenbach <sebastia@l00-bugdead-prods.de>
+	* ECPG.pgm
+	* testECPG.m
+	* testMySQL.m
+	* testSQLite.m
+	  use PRIuPTR to NSLog NSUIntegers
+
+2013-01-31 Richard Frith-Macdonald  <rfm@gnu.org>
+
+        * SQLClient.m: Check for -disconnect being called when inside a
+        transaction and handle locking properly in that case.
+        Change simple execute and query methods so they don't call -debug:
+        inside locked regions, in case the method has been overridden to
+        do something not safe in such locked sections (such as trying a
+        query in another thread to report extra debug info).
+
 2012-11-29 Richard Frith-Macdonald  <rfm@gnu.org>
 
         * Wrap more code in exception handlers where there is any potential

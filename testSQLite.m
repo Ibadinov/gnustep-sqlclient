@@ -91,8 +91,8 @@ main()
 
   [db execute: @"insert into xxx "
     @"(k, char1, intval, realval, b) "
-    @"values ("
-    @"'hello', "
+    @"values (",
+    [db quoteString: @"hello"], @", "
     @"'X', "
     @"1, ",
     @"12345.6789, ",
@@ -104,7 +104,7 @@ main()
 
   if ([records count] != 2)
     {
-      NSLog(@"Expected 2 records but got %u", [records count]);
+      NSLog(@"Expected 2 records but got %" PRIuPTR "", [records count]);
     }
   else
     {

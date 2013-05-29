@@ -1322,6 +1322,16 @@ static unsigned int	maxConnections = 8;
       NSNotificationCenter  *nc;
 
       [lock lock];
+      if (YES == _inTransaction)
+        {
+          /* If we are inside a transaction we must be doubly locked,
+           * so we do an unlock corresponding to the -begin before we
+           * disconnect (the disconnect implicitly rolls back the
+           * transaction).
+           */
+          _inTransaction = NO;
+          [lock unlock];
+        }
       if (connected == YES)
 	{
 	  NS_DURING
@@ -1612,7 +1622,7 @@ static unsigned int	maxConnections = 8;
 
 - (NSString*) quoteBigInteger: (int64_t)i
 {
-  return [NSString stringWithFormat: @"%lld", i];
+  return [NSString stringWithFormat: @"%"PRId64, i];
 }
 
 - (NSString*) quoteCString: (const char *)s
@@ -1850,6 +1860,7 @@ static unsigned int	maxConnections = 8;
 - (NSInteger) simpleExecute: (NSArray*)info
 {
   NSInteger     result;
+  NSString      *debug = nil;
 
   [lock lock];
   NS_DURING
@@ -1886,21 +1897,24 @@ static unsigned int	maxConnections = 8;
 	    {
 	      if (isCommit || isRollback)
 		{
-		  NSEnumerator	*e = [_statements objectEnumerator];
+		  NSEnumerator	        *e = [_statements objectEnumerator];
+                  NSMutableString       *m;
+
 		  if (isCommit)
 		    {
-		      [self debug:
-			@"Duration %g for transaction commit ...", d];
+                      m = [NSMutableString stringWithFormat:
+			@"Duration %g for transaction commit ...\n", d];
 		    }
 		  else 
 		    {
-		      [self debug:
-			@"Duration %g for transaction rollback ...", d];
+                      m = [NSMutableString stringWithFormat:
+			@"Duration %g for transaction rollback ...\n", d];
 		    }
 		  while ((statement = [e nextObject]) != nil)
 		    {
-		      [self debug: @"  %@;", statement];
+                      [m appendFormat: @"  %@;\n", statement];
 		    }
+                  debug = m;
 		}
 	      else if ([self debugging] > 1)
 		{
@@ -1908,12 +1922,13 @@ static unsigned int	maxConnections = 8;
 		   * For higher debug levels, we log data objects as well
 		   * as the query string, otherwise we omit them.
 		   */
-		  [self debug: @"Duration %g for statement %@", d, info];
+                  debug = [NSString stringWithFormat:
+                    @"Duration %g for statement %@", d, info];
 		}
 	      else
 		{
-		  [self debug: @"Duration %g for statement %@",
-		    d, statement];
+                  debug = [NSString stringWithFormat:
+		    @"Duration %g for statement %@", d, statement];
 		}
 	    }
 	}
@@ -1934,6 +1949,10 @@ static unsigned int	maxConnections = 8;
     }
   NS_ENDHANDLER
   [lock unlock];
+  if (nil != debug)
+    {
+      [self debug: @"%@", debug];
+    }
   return result;
 }
 
@@ -1947,6 +1966,7 @@ static unsigned int	maxConnections = 8;
 		       listType: (id)ltype
 {
   NSMutableArray	*result = nil;
+  NSString              *debug = nil;
 
   if (rtype == 0) rtype = rClass;
   if (ltype == 0) ltype = aClass;
@@ -1968,7 +1988,8 @@ static unsigned int	maxConnections = 8;
 	  d = _lastOperation - start;
 	  if (d >= _duration)
 	    {
-	      [self debug: @"Duration %g for query %@", d, stmt];
+	      debug = [NSString stringWithFormat:
+                @"Duration %g for query %@", d, stmt];
 	    }
 	}
     }
@@ -1979,6 +2000,10 @@ static unsigned int	maxConnections = 8;
     }
   NS_ENDHANDLER
   [lock unlock];
+  if (nil != debug)
+    {
+      [self debug: @"%@", debug];
+    }
   return result;
 }
 
@@ -2226,11 +2251,11 @@ static unsigned int	maxConnections = 8;
     {
       [self disconnect];
 #ifdef	GNUSTEP
-      GSDebugAllocationRemove(self->isa, self);
+      GSDebugAllocationRemove(object_getClass(self), self);
 #endif
-      self->isa = c;
+      object_setClass(self, c);
 #ifdef	GNUSTEP
-      GSDebugAllocationAdd(self->isa, self);
+      GSDebugAllocationAdd(object_getClass(self), self);
 #endif
     }
 
@@ -3479,3 +3504,66 @@ validName(NSString *name)
   [lock unlock];
 }
 @end
+
+
+
+@implementation SQLDictionaryBuilder
+- (void) addObject: (id)anObject
+{
+  return;
+}
+
+- (id) alloc
+{
+  return [self retain];
+}
+
+- (NSMutableDictionary*) content
+{
+  return content;
+}
+
+- (void) dealloc
+{
+  [content release];
+  [super dealloc];
+}
+
+- (id) initWithCapacity: (NSUInteger)capacity
+{
+  DESTROY(content);
+  content = [[NSMutableDictionary alloc] initWithCapacity: capacity];
+  return self;
+}
+
+- (id) newWithValues: (id*)values
+		keys: (NSString**)keys
+	       count: (unsigned int)count
+{
+  if (count != 2)
+    {
+      [NSException raise: NSInvalidArgumentException
+                  format: @"Query did not return key/value pairs"];
+    }
+  [content setObject: values[1] forKey: values[0]];
+  return nil;
+}
+@end
+
+@implementation SQLSingletonBuilder
+- (id) newWithValues: (id*)values
+		keys: (NSString**)keys
+	       count: (unsigned int)count
+{
+  /* Instead of creating an object to hold the supplied record,
+   * we use the field from the record as the value to be used.
+   */
+  if (count != 1)
+    {
+      [NSException raise: NSInvalidArgumentException
+                  format: @"Query did not return singleton values"];
+    }
+  return [values[0] retain];
+}
+@end
+
